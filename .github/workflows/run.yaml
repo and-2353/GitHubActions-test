@@ -28,7 +28,7 @@ jobs:
           echo -e "
             ❌無効なファイル名が検出されました：ファイル名に使用できない文字（例: < > : \" \\ | ? *）が含まれています。
             ```
-            "$INVALID_FILES"
+            $INVALID_FILES
             ```
           " | tee /tmp/comment
           gh pr comment "${PR_NUMBER}" -F /tmp/comment
