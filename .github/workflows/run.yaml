@@ -12,6 +12,9 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v3
 
+    - name: Fetch all branches
+      uses: git fetch --prune --unshallow
+
     - name: Validate file names
       run: |
         INVALID_CHARS='[<>:"/\\|?*]'
