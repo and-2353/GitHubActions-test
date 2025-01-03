@@ -15,6 +15,7 @@ jobs:
     - name: Validate file names
       run: |
         INVALID_CHARS='[<>:"/\\|?*]'
+        git branch
         git diff --name-only --diff-filter=A origin/${{ github.base_ref }}
         INVALID_FILES=$(git diff --name-only --diff-filter=A origin/${{ github.base_ref }} | grep -E "$INVALID_CHARS" || true)
         if [ -n "$INVALID_FILES" ]; then
