@@ -1,47 +1,41 @@
 name: Validate File Names
 
 on:
-  pull_request:
-    types: [opened, synchronize, reopened]
+  push:
   workflow_dispatch: # 手動トリガー有効化
 
 jobs:
   validate:
     runs-on: ubuntu-latest
     steps:
-    - name: Checkout repository
+    - name: Checkout
       uses: actions/checkout@v3
 
-    - name: Fetch all branches
+    - name: Fetch
       run: git fetch --prune --unshallow
 
-    - name: Validate file names
+    - name: ファイル名のチェック
+      id: validate
       run: |
         INVALID_CHARS='[<>:"/\\|?*]'
-        git branch
-        git diff --name-only --diff-filter=A origin/${{ github.base_ref }}
         INVALID_FILES=$(git diff --name-only --diff-filter=A origin/${{ github.base_ref }} | grep -E "$INVALID_CHARS" || true)
-        if [ -n "$INVALID_FILES" ]; then
-          echo "❌ Invalid file names detected:"
-          echo "$INVALID_FILES"
-          echo "::set-output name=invalid_files::$INVALID_FILES"
-          exit 1
-        else
-          echo "✅ Invalid file names not detected"
-        fi
-      id: validate
 
-    - name: Comment on PR
+    - name: PRへのコメント（異常系）
       if: steps.validate.outcome == 'failure'
-      uses: marocchino/sticky-pull-request-comment@v2
-      with:
+      env:
+        PR_NUMBER: ${{ github.event.number }}
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        header: "File Name Validation Result"
-        message: |
-          ❌ Some file names contain characters invalid on Windows:
+      run: |
+        echo -e "
+          ❌無効なファイル名が検出されました：ファイル名に使用できない文字（例: < > : \" / \\ | ? *）が含まれています。
           ```
           ${{ steps.validate.outputs.invalid_files }}
           ```
-    - name: All files are valid
+        " > /tmp/comment
+        gh pr comment "${PR_NUMBER}" -F /tmp/comment
+
+    - name: PRへのコメント（正常系）
       if: steps.check_invalid_names.outputs.invalid_files == 'false'
-      run: echo "✅ All file names are valid for Windows."
+      run:  |
+        echo "✅無効なファイル名は検出されませんでした" > /tmp/comment
+        gh pr comment "${PR_NUMBER}" -F /tmp/comment
