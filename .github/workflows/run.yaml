@@ -2,7 +2,6 @@ name: Validate File Names
 
 on:
   push:
-  pull_request:
   workflow_dispatch: # 手動トリガー有効化
 
 jobs:
@@ -27,9 +26,7 @@ jobs:
         if [ -n "$INVALID_FILES" ]; then
           echo -e "
             ❌無効なファイル名が検出されました：ファイル名に使用できない文字（例: < > : \" \\ | ? *）が含まれています。
-            ```
             $INVALID_FILES
-            ```
           " | tee /tmp/comment
           gh pr comment "${PR_NUMBER}" -F /tmp/comment
           exit 1
