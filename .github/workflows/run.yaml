@@ -2,6 +2,7 @@ name: Validate File Names
 
 on:
   push:
+  pull_request:
   workflow_dispatch: # 手動トリガー有効化
 
 jobs:
