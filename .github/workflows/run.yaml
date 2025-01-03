@@ -19,6 +19,14 @@ jobs:
       run: |
         INVALID_CHARS='[<>:"/\\|?*]'
         INVALID_FILES=$(git diff --name-only --diff-filter=A origin/${{ github.base_ref }} | grep -E "$INVALID_CHARS" || true)
+        if [ -n "$INVALID_FILES" ]; then
+          echo "❌無効なファイル名が検出されました：ファイル名に使用できない文字（例: < > : \" / \\ | ? *）が含まれています。"
+          echo "$INVALID_FILES"
+          echo "::set-output name=invalid_files::$INVALID_FILES"
+          exit 1
+        else
+          echo "✅無効なファイル名は検出されませんでした"
+        fi
 
     - name: PRへのコメント（異常系）
       if: steps.validate.outcome == 'failure'
