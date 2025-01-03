@@ -14,36 +14,28 @@ jobs:
     - name: Fetch
       run: git fetch --prune --unshallow
 
+
     - name: ファイル名のチェック
       id: validate
-      run: |
-        INVALID_CHARS='[<>:"/\\|?*]'
-        INVALID_FILES=$(git diff --name-only --diff-filter=A origin/${{ github.base_ref }} | grep -E "$INVALID_CHARS" || true)
-        if [ -n "$INVALID_FILES" ]; then
-          echo "❌無効なファイル名が検出されました：ファイル名に使用できない文字（例: < > : \" / \\ | ? *）が含まれています。"
-          echo "$INVALID_FILES"
-          echo "::set-output name=invalid_files::$INVALID_FILES"
-          exit 1
-        else
-          echo "✅無効なファイル名は検出されませんでした"
-        fi
-
-    - name: PRへのコメント（異常系）
-      if: steps.validate.outcome == 'failure'
       env:
         PR_NUMBER: ${{ github.event.number }}
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
-        echo -e "
-          ❌無効なファイル名が検出されました：ファイル名に使用できない文字（例: < > : \" / \\ | ? *）が含まれています。
-          ```
-          ${{ steps.validate.outputs.invalid_files }}
-          ```
-        " > /tmp/comment
-        gh pr comment "${PR_NUMBER}" -F /tmp/comment
-
-    - name: PRへのコメント（正常系）
-      if: steps.check_invalid_names.outputs.invalid_files == 'false'
-      run:  |
-        echo "✅無効なファイル名は検出されませんでした" > /tmp/comment
-        gh pr comment "${PR_NUMBER}" -F /tmp/comment
+        INVALID_CHARS='[<>:"\\|?*]'
+        INVALID_FILES=$(git diff --name-only --diff-filter=A origin/main | grep -E "$INVALID_CHARS" || true)
+        if [ -n "$INVALID_FILES" ]; then
+          echo "❌無効なファイル名が検出されました：ファイル名に使用できない文字（例: < > : \" \\ | ? *）が含まれています。"
+          echo "$INVALID_FILES"
+          echo -e "
+            ❌無効なファイル名が検出されました：ファイル名に使用できない文字（例: < > : \" \\ | ? *）が含まれています。
+            ```
+            ${{ INVALID_FILES }}
+            ```
+          " > /tmp/comment
+          gh pr comment "${PR_NUMBER}" -F /tmp/comment
+          exit 1
+        else
+          echo "✅無効なファイル名は検出されませんでした"
+          echo "✅無効なファイル名は検出されませんでした" > /tmp/comment
+          gh pr comment "${PR_NUMBER}" -F /tmp/comment
+        fi
